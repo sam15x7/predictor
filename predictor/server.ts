@@ -99,6 +99,28 @@ async function startServer() {
     }
   });
 
+  app.get('/api/player', async (req, res) => {
+    try {
+      const { search } = req.query;
+      const apiKey = process.env.API_FOOTBALL_KEY || "d5a28f5444664234ae1401e2d94c7fae"; 
+      const response = await axios.get(`https://v3.football.api-sports.io/players?search=${search}&league=1`, {
+        headers: { 'x-apisports-key': apiKey }
+      });
+      // if league 1 (world cup) provides no result without season, fallback to global search without league
+      if (response.data && response.data.results > 0) {
+        return res.json(response.data);
+      }
+      
+      const response2 = await axios.get(`https://v3.football.api-sports.io/players?search=${search}`, {
+        headers: { 'x-apisports-key': apiKey }
+      });
+      res.json(response2.data);
+    } catch (e) {
+      console.error(e);
+      res.status(500).json({ error: 'Failed to fetch player.' });
+    }
+  });
+
   // Mock News Feed for FIFA WC 2026
   app.get('/api/news', (req, res) => {
     res.json([
